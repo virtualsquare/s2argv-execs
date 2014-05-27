@@ -1,0 +1,84 @@
+.\"* s2argv: convert strings to argv
+.\" Copyright (C) 2014 Renzo Davoli. University of Bologna. <renzo@cs.unibo.it>
+.\" 
+.\" This library is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU Lesser General Public
+.\" License as published by the Free Software Foundation; either
+.\" version 2.1 of the License, or (at your option) any later version.
+.\" 
+.\" This library is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+.\" Lesser General Public License for more details.
+.\" 
+.\" You should have received a copy of the GNU Lesser General Public
+.\" License along with this library; if not, write to the Free Software
+.\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+.TH execs 3 2014-05-27 "VirtualSquare" "Linux Programmer's Manual"
+.SH NAME
+execs, execsp, execspe \- execute a file taking its arguments from a string
+.SH SYNOPSIS
+.B #include <unistd.h>
+.br
+.B #include <s2argv.h>
+.sp
+.BI "int execs(const char *" path ", char *" args ");"
+.br
+.BI "int execsp(char *" args ");"
+.br
+.BI "int execspe(char *" args ", char *const " envp "[]);"
+.sp
+.SH DESCRIPTION
+This
+group of functions extends the family of \fBexec\fR(3) provided by the libc.
+.br
+\fBexecs\fR(3), \fBexecsp\fR(3) and \fBexecspe\fR(3) are similar to
+\fBexecv\fR(3), \fBexecvp\fR(3) and \fBexecvpe\fR(3), respectively, but
+take the command line arguments for the file to execute 
+(and the filename for \fBexecsp\fR(3) and \fBexecspe\fR(3))
+by parsing a command string \fIargs\fR.
+.br
+Command arguments in \fIargs\fR are delimited by space characters (blank, tabs
+or new lines).
+Single or double quotes can be used to delimitate command arguments including
+spaces and a non quoted backslash (\fB\e\fP)
+is the escape character to protects the next char.
+.br
+\fBexecs\fR(3), \fBexecsp\fR(3) and \fBexecspe\fR(3) do not use
+dynamic allocation but modify \fIargs\fR.
+In case the same argv should be used for several exec command, use
+\fBs2argv\fR(3) instead.
+
+.SH RETURN VALUE
+These functions return only if an error has occurred. The return value
+is always \-1. The failure cases and errno values are those specified
+for \fBexecve\fR(2).
+
+.SH EXAMPLE
+The following program demonstrates the use of \fBs2argv\fR:
+.BR
+.sp
+\&
+.nf
+#include <stdio.h>
+#include <unistd.h>
+#include <s2argv.h>
+
+#define BUFLEN 1024
+int main(int argc, char *argv)
+{
+	char buf[BUFLEN];
+	printf("type in a command and its arguments, e.g. 'ls -l'\n");
+	if (fgets(buf, BUFLEN, stdin) != NULL) {
+		execsp(buf);
+		printf("exec error\n");
+	}
+}
+.fi
+.SH SEE ALSO
+.BR exec (3), s2argv (3)
+.SH BUGS
+Bug reports should be addressed to <info@virtualsquare.org>
+.SH AUTHOR
+Renzo Davoli <renzo@cs.unibo.it>
+
