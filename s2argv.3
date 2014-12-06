@@ -68,7 +68,7 @@ The following program demonstrates the use of \fBs2argv\fR:
 int main(int argc, char *argv)
 {
 	char buf[BUFLEN];
-	printf("type in a command and its arguments, e.g. 'ls -l'\n");
+	printf("type in a command and its arguments, e.g. 'ls -l'\\n");
 	if (fgets(buf, BUFLEN, stdin) != NULL) {
 		char **argv=s2argv(buf, NULL);
 		execvp(argv[0], argv);
