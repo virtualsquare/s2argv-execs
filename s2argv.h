@@ -46,11 +46,11 @@ void s2argv_free(char **argv);
 /* execs is like execv: argv is computed by parsing args */
 /* execsp is like execvp: argv is computed by parsing args,
 	 argv[0] is the executable file to be searched for along $PATH */
-/* execspe allows the specification of the environment (as in execle or
-	 execvpe) */
-/* execs, execsp and execspe do not require dynamic allocation *but*
+/* execse and execspe permit the specification of the environment 
+	 (as in execve or execvpe) */
+/* execs, execse, execsp and execspe do not require dynamic allocation *but*
 	 require an extra copy of args on the stack */
-/* nocopy version, args is modified 
+/* in all execs*_nocopy functions, the string args is modified 
 	 (no extra copies on the stack, args is parsed on itself): */
 int execs_common(const char *path, const char *args, char *const envp[], char *buf);
 
