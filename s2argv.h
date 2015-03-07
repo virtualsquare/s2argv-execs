@@ -27,11 +27,11 @@
 extern char **environ;
 
 /* This header file declares all the functions defined in
-	 the libs2argv library.
-	 libs2argv_nocopy is a minimal library designed for embedded system
-	 with strict memory requirements. It implements only the
-	 _nocopy functions i.e. execs_nocopy, execsp_nocopy and 
-	 execsp_nocopy (programs can also use the system_nocopy inline function) */
+	 the libs2argv library.  
+	 libexecs is a minimal subset of the libs2argv library designed 
+	 for embedded systems with strict memory requirements. 
+	 It implements only the execs* functions. Programs using libexecs
+	 can also use the system_nocopy inline function */
 
 /* s2argv parses args. 
 	 It allocates, initializes and returns an argv array, ready for execv. 
