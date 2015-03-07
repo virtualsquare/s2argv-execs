@@ -19,6 +19,19 @@
 
 #ifndef S2ARGV_H
 #define S2ARGV_H
+#include <sys/types.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <string.h>
+
+extern char **environ;
+
+/* This header file declares all the functions defined in
+	 the libs2argv library.
+	 libs2argv_nocopy is a minimal library designed for embedded system
+	 with strict memory requirements. It implements only the
+	 _nocopy functions i.e. execs_nocopy, execsp_nocopy and 
+	 execsp_nocopy (programs can also use the system_nocopy inline function) */
 
 /* s2argv parses args. 
 	 It allocates, initializes and returns an argv array, ready for execv. 
@@ -36,8 +49,125 @@ void s2argv_free(char **argv);
 /* execspe allows the specification of the environment (as in execle or
 	 execvpe) */
 /* execs, execsp and execspe do not require dynamic allocation *but*
-	 modify args as a side effect */
-int execs(const char *path, char *args);
-int execsp(char *args);
-int execspe(char *args, char *const envp[]);
+	 require an extra copy of args on the stack */
+/* nocopy version, args is modified 
+	 (no extra copies on the stack, args is parsed on itself): */
+int execs_common(const char *path, const char *args, char *const envp[], char *buf);
+
+static inline int execs(const char *path, const char *args) {
+	char buf[strlen(args)+1]; 
+	return execs_common(path, args, environ, buf);
+}
+
+static inline int execse(const char *path, const char *args, char *const envp[]) {
+	char buf[strlen(args)+1]; 
+	return execs_common(path, args, envp, buf);
+}
+
+static inline int execsp(const char *args) {
+	char buf[strlen(args)+1]; 
+	return execs_common(NULL, args, environ, buf);
+}
+
+static inline int execspe(const char *args, char *const envp[]) {
+	char buf[strlen(args)+1]; 
+	return execs_common(NULL, args, envp, buf);
+}
+
+static inline int execs_nocopy(const char *path, char *args) {
+	return execs_common(path, args, environ, args);
+}
+
+static inline int execse_nocopy(const char *path, char *args, char *const envp[]) {
+	return execs_common(path, args, envp, args);
+}
+
+static inline int execsp_nocopy(char *args) {
+	return execs_common(NULL, args, environ, args);
+}
+
+static inline int execspe_nocopy(char *args, char *const envp[]) {
+	return execs_common(NULL, args, envp, args);
+}
+
+static inline int system_nocopy(const char *command) {
+	int status;
+	pid_t pid;
+	switch (pid=fork()) {
+		case -1:
+			return -1;
+		case 0:
+			execs_common(NULL, (char *) command, environ, (char *) command);
+			_exit(127);
+		default:
+			waitpid(pid,&status,0);
+			return status;
+	}
+}
+
+/* system_noshell is an "almost" drop in replacement for system(3).
+	 it does not start a shell but it parses the arguments and
+	 runs the command */
+/* system_execs is similar to system_noshell but instead of searching the
+	 executable file along the directories listed in $PATH it starts
+	 the program whose path has been passed as its first arg. */
+int system_execs(const char *path, const char *command);
+
+static inline int system_noshell(const char *command) {
+	return system_execs(NULL, command);
+}
+
+/* popen_noshell is an "almost" drop in replacement for popen(3),
+	 and pclose_noshell is its counterpart for pclose(3). */
+/* popen_execs/pclose_execs do not use $PATH to search the executable file*/
+FILE *popen_execs(const char *path, const char *command, const char *type);
+int pclose_execs(FILE *stream);
+
+static inline FILE *popen_noshell(const char *command, const char *type) {
+	return popen_execs(NULL, command, type);
+}
+
+static inline int pclose_noshell(FILE *stream) {
+	return pclose_execs(stream);
+}
+
+/* run a command in coprocessing mode */
+pid_t coprocess_common(const char *path, const char *command,
+		char *const argv[], char *const envp[], int pipefd[2]);
+
+static inline pid_t coprocv(const char *path, char *const argv[], int pipefd[2]) {
+	return coprocess_common(path, NULL, argv, environ, pipefd);
+}
+
+static inline pid_t coprocve(const char *path, char *const argv[], char *const envp[], int pipefd[2]) {
+	return coprocess_common(path, NULL, argv, envp, pipefd);
+}
+
+static inline pid_t coprocvp(const char *file, char *const argv[], int pipefd[2]) {
+	return coprocess_common(NULL, file, argv, environ, pipefd);
+}
+
+static inline pid_t coprocvpe(const char *file, char *const argv[],
+		char *const envp[], int pipefd[2]) {
+	return coprocess_common(NULL, file, argv, envp, pipefd);
+}
+
+static inline pid_t coprocs(const char *path, const char *command, int pipefd[2]) {
+	return coprocess_common(path, command, NULL, environ, pipefd);
+}
+
+static inline pid_t coprocse(const char *path, const char *command, 
+		char *const envp[], int pipefd[2]) {
+	return coprocess_common(path, command, NULL, envp, pipefd);
+}
+
+static inline pid_t coprocsp(const char *command, int pipefd[2]) {
+	return coprocess_common(NULL, command, NULL, environ, pipefd);
+}
+
+static inline pid_t coprocspe(const char *command, 
+		char *const envp[], int pipefd[2]) {
+	return coprocess_common(NULL, command, NULL, envp, pipefd);
+}
+
 #endif

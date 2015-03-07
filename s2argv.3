@@ -34,7 +34,7 @@ convert a command string in an argv array for \fBexecv\fR(3),
 \fBexecvp\fR(3) or \fBexecvpe\fR(3).
 Single or double quotes can be used to delimitate command arguments including
 spaces and a non quoted backslash (\fB\e\fP)
-is the escape character to protects the next char.
+is the escape character to protect the next char.
 .br
 If
 .IR pargc
@@ -73,7 +73,7 @@ int main(int argc, char *argv)
 		char **argv=s2argv(buf, NULL);
 		execvp(argv[0], argv);
 		s2argv_free(argv);
-		printf("exec error\n");
+		printf("exec error\\n");
 	}
 }
 .fi

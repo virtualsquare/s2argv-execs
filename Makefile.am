@@ -1,5 +1,8 @@
-lib_LTLIBRARIES = libs2argv.la
-libs2argv_la_SOURCES = s2argv.c
-libs2argv_la_LDFLAGS = -version-number 0:1:0
+lib_LTLIBRARIES = libs2argv.la libs2argv_nocopy.la
+libs2argv_la_SOURCES = s2argv.c noshell.c
+libs2argv_nocopy_la_SOURCES = s2argv.c
+libs2argv_nocopy_la_CPPFLAGS = -DNOCOPY_ONLY
+libs2argv_la_LDFLAGS = -version-number 0:1:1
+libs2argv_nocopy_la_LDFLAGS = -version-number 0:1:1
 include_HEADERS = s2argv.h
-man_MANS = s2argv.3 execs.3
+man_MANS = s2argv.3 execs.3 system_noshell.3 popen_noshell.3 coprocess.3

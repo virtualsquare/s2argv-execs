@@ -22,63 +22,51 @@
 #include "s2argv.h"
 //#define  S2ARGVTEST
 
-#define SPACE 0
-#define CHAR 1
-#define SINGLEQUOTE 2
-#define DOUBLEQUOTE 3
-#define ESCAPE 4
-#define NSTATES (ESCAPE+1)
+#define END 0
+#define SPACE 1
+#define CHAR 2
+#define SINGLEQUOTE 3
+#define DOUBLEQUOTE 4
+#define ESCAPE 5
+#define DOUBLEESC 6
+#define NSTATES (DOUBLEESC+1)
 
 #define NEWARG 1
 #define CHARCOPY 2
 #define ENDARG 4
 
-char nextstate[NSTATES][NSTATES]= {
-	{SPACE,CHAR,SINGLEQUOTE,DOUBLEQUOTE,ESCAPE},
-	{SPACE,CHAR,SINGLEQUOTE,DOUBLEQUOTE,ESCAPE},
-	{SINGLEQUOTE,SINGLEQUOTE,CHAR,SINGLEQUOTE,SINGLEQUOTE},
-	{DOUBLEQUOTE,DOUBLEQUOTE,DOUBLEQUOTE,CHAR,DOUBLEQUOTE},
-	{CHAR,CHAR,CHAR,CHAR,CHAR}};
+char nextstate[NSTATES][NSTATES-1]= {
+	{END,0,0,0,0,0},
+	{END,SPACE,CHAR,SINGLEQUOTE,DOUBLEQUOTE,ESCAPE},
+	{END,SPACE,CHAR,SINGLEQUOTE,DOUBLEQUOTE,ESCAPE},
+	{END,SINGLEQUOTE,SINGLEQUOTE,CHAR,SINGLEQUOTE,SINGLEQUOTE},
+	{END,DOUBLEQUOTE,DOUBLEQUOTE,DOUBLEQUOTE,CHAR,DOUBLEESC},
+	{END,CHAR,CHAR,CHAR,CHAR,CHAR},
+	{END,DOUBLEQUOTE,DOUBLEQUOTE,DOUBLEQUOTE,DOUBLEQUOTE,DOUBLEQUOTE}};
 
-char action[NSTATES][NSTATES]= {
-	{0,NEWARG|CHARCOPY,NEWARG,NEWARG,NEWARG},
-	{ENDARG,CHARCOPY,0,0,0},
-	{CHARCOPY,CHARCOPY,0,CHARCOPY,CHARCOPY},
-	{CHARCOPY,CHARCOPY,CHARCOPY,0,CHARCOPY},
-	{CHARCOPY,CHARCOPY,CHARCOPY,CHARCOPY,CHARCOPY}};
+char action[NSTATES][NSTATES-1]= {
+	{0,0,NEWARG|CHARCOPY,NEWARG,NEWARG,NEWARG},
+	{0,0,NEWARG|CHARCOPY,NEWARG,NEWARG,NEWARG},
+	{ENDARG,ENDARG,CHARCOPY,0,0,0},
+	{CHARCOPY,CHARCOPY,CHARCOPY,0,CHARCOPY,CHARCOPY},
+	{CHARCOPY,CHARCOPY,CHARCOPY,CHARCOPY,0,0},
+	{CHARCOPY,CHARCOPY,CHARCOPY,CHARCOPY,CHARCOPY,CHARCOPY},
+	{CHARCOPY,CHARCOPY,CHARCOPY,CHARCOPY,CHARCOPY,CHARCOPY}};
 
-static void args_fsa_s2argv(int argc, char *arg, char *arg_in_s, void *opaque)
+static int args_fsa(const char *args, char **argv, char *buf)
 {
-	char **argv=opaque;
-	argv[argc]=strdup(arg);
-}
-
-static void args_fsa_execs(int argc, char *arg, char *arg_in_s, void *opaque)
-{
-	char **argv=opaque;
-	argv[argc]=arg_in_s;
-	strcpy(arg_in_s, arg);
-}
-
-static int args_fsa(char *args, 
-		void (*fsa_argf)(int argc, char *arg, char *arg_in_s, void *opaque),
-		void *opaque)
-{
-	char thisarg[strlen(args)+1]; // each arg is no longer than the entire string!
-	char *pthisarg;
-	char *pthiss;
-	int argc=0;
 	int state=SPACE;
-	int len=strlen(args);
-	int i;
-	int quote;
-	for (i=0; i<=len; i++) {
+	int argc=0;
+	char *thisarg;
+	for (;state != END;args++) {
 		int this;
-		switch (args[i]) {
+		switch (*args) {
+			case 0:
+				this=END;
+				break;
 			case ' ':
 			case '\t':
 			case '\n':
-			case 0:
 				this=SPACE;
 				break;
 			case '\'':
@@ -93,30 +81,38 @@ static int args_fsa(char *args,
 			default:
 				this=CHAR;
 		}
-		if (action[state][this] & NEWARG) {
-			pthisarg=thisarg;
-			pthiss=&args[i];
-		}
-		if (action[state][this] & CHARCOPY)
-			*pthisarg++=args[i];
-		if (action[state][this] & ENDARG) {
-			*pthisarg=0;
-			if (fsa_argf)
-				fsa_argf(argc,thisarg,pthiss,opaque);
-			//printf("%d %s\n",argc,thisarg);
+		if (argv) {
+			if (action[state][this] & NEWARG)
+				thisarg=buf;
+			if (action[state][this] & CHARCOPY)
+				*buf++=*args;
+			if (action[state][this] & ENDARG) {
+				*buf++=0;
+				*argv++=thisarg;
+			}
+		} 
+		if (action[state][this] & ENDARG)
 			argc++;
-		}
+		//printf("%s %d->%d\n",args,state,nextstate[state][this]);
 		state=nextstate[state][this];
 	}
+	if (argv)
+		*argv=0;
 	return argc;
 }
 
+#ifndef NOCOPY_ONLY
+
 char **s2argv(const char *args, int *pargc)
 {
-	int argc=args_fsa((char *)args,NULL,NULL);
+	int argc=args_fsa(args,NULL,NULL);
+	char buf[strlen(args)+1];
 	char **argv=calloc(argc+1,sizeof(char *));
 	if (argv) {
-		args_fsa((char *)args,args_fsa_s2argv,argv);
+		int i;
+		args_fsa(args,argv,buf);
+		for (i=0; i<argc; i++)
+			argv[i]=strdup(argv[i]);
 		if (pargc)
 			*pargc=argc;
 	}
@@ -130,32 +126,17 @@ void s2argv_free(char **argv)
 		free(*scan);
 	free(argv);
 }
+#endif
 
-int execs(const char *path, char *args)
+int execs_common(const char *path, const char *args, char *const envp[], char *buf)
 {
 	int argc=args_fsa(args,NULL,NULL);
 	char *argv[argc+1];
-	args_fsa(args,args_fsa_execs,argv);
-	argv[argc]=(char *)0;
-	return execv(path, argv);
-}
-
-int execsp(char *args)
-{
-	int argc=args_fsa(args,NULL,NULL);
-	char *argv[argc+1];
-	args_fsa(args,args_fsa_execs,argv);
-	argv[argc]=(char *)0;
-	return execvp(argv[0], argv);
-}
-
-int execspe(char *args, char *const envp[])
-{
-	int argc=args_fsa(args,NULL,NULL);
-	char *argv[argc+1];
-	args_fsa(args,args_fsa_execs,argv);
-	argv[argc]=(char *)0;
-	return execvpe(argv[0], argv, envp);
+	args_fsa(args,argv,buf);
+	if (path)
+		return execve(path, argv, envp);
+	else
+		return execvpe(argv[0], argv, envp);
 }
 
 #ifdef S2ARGVTEST
@@ -182,13 +163,12 @@ main()
 		printargv(0,myargv);
 		s2argv_free(myargv);
 		if (fork()==0) {
-			execsp(buf);
+			execsp_nocopy(buf);
 			exit(-1);
 		} else {
 			int status;
 			wait(&status);
 		}
-
 	}
 }
 #endif
