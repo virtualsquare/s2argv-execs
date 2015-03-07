@@ -54,24 +54,21 @@ void s2argv_free(char **argv);
 	 (no extra copies on the stack, args is parsed on itself): */
 int execs_common(const char *path, const char *args, char *const envp[], char *buf);
 
-static inline int execs(const char *path, const char *args) {
-	char buf[strlen(args)+1]; 
-	return execs_common(path, args, environ, buf);
-}
-
 static inline int execse(const char *path, const char *args, char *const envp[]) {
 	char buf[strlen(args)+1]; 
 	return execs_common(path, args, envp, buf);
 }
 
+static inline int execs(const char *path, const char *args) {
+	return execse(path, args, environ);
+}
+
 static inline int execsp(const char *args) {
-	char buf[strlen(args)+1]; 
-	return execs_common(NULL, args, environ, buf);
+	return execse(NULL, args, environ);
 }
 
 static inline int execspe(const char *args, char *const envp[]) {
-	char buf[strlen(args)+1]; 
-	return execs_common(NULL, args, envp, buf);
+	return execse(NULL, args, envp);
 }
 
 static inline int execs_nocopy(const char *path, char *args) {
@@ -132,13 +129,13 @@ static inline int system_execsp(const char *command) {
 FILE *popen_execs(const char *path, const char *command, const char *type);
 int pclose_execs(FILE *stream);
 
-static inline FILE *popen_noshell(const char *command, const char *type) {
+#define popen_noshell popen_execsp
+static inline FILE *popen_execsp(const char *command, const char *type) {
 	return popen_execs(NULL, command, type);
 }
 
-static inline int pclose_noshell(FILE *stream) {
-	return pclose_execs(stream);
-}
+#define pclose_noshell pclose_execs
+#define pclose_execsp pclose_execs
 
 /* run a command in coprocessing mode */
 pid_t coprocess_common(const char *path, const char *command,
