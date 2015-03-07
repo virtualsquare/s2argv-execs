@@ -111,10 +111,19 @@ static inline int system_nocopy(const char *command) {
 /* system_execs is similar to system_noshell but instead of searching the
 	 executable file along the directories listed in $PATH it starts
 	 the program whose path has been passed as its first arg. */
-int system_execs(const char *path, const char *command);
+int system_execsr(const char *path, const char *command, int *redir);
 
-static inline int system_noshell(const char *command) {
-	return system_execs(NULL, command);
+static inline int system_execsrp(const char *command, int *redir) {
+	return system_execsr(NULL, command, redir);
+}
+
+static inline int system_execs(const char *path, const char *command) {
+	return system_execsr(path, command, NULL);
+}
+
+#define system_noshell system_execsp
+static inline int system_execsp(const char *command) {
+	return system_execsr(NULL, command, NULL);
 }
 
 /* popen_noshell is an "almost" drop in replacement for popen(3),

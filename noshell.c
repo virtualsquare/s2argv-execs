@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <s2argv.h>
 
-int system_execs(const char *path, const char *command) {
+int system_execsr(const char *path, const char *command, int *redir) {
 	if (command) {
 		int status;
 		pid_t pid;
@@ -14,6 +14,15 @@ int system_execs(const char *path, const char *command) {
 			case -1:
 				return -1;
 			case 0:
+				if (redir) {
+					int i;
+					for (i=0; i<3; i++) {
+						if (redir[i] >= 0 && redir[i] != i) {
+							dup2(redir[i],i);
+							close(redir[i]);
+						}
+					}
+				}
 				execs(path, command);
 				_exit(127);
 			default:

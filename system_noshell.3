@@ -24,12 +24,19 @@ system_noshell, system_execs \- execute a command with its arguments from a stri
 .B #include <s2argv.h>
 .sp
 .BI "int system_noshell(const char *" command ");"
+.sp
+.BI "int system_execsp(const char *" command ");"
 .br
 .BI "int system_execs(const char *" path ", char const *" command ");"
+.sp
+.BI "int system_execsrp(const char *" command ", int *" redir ");"
+.br
+.BI "int system_execsr(const char *" path ", char const *" command ", int *" redir ");"
 .SH DESCRIPTION
 \fBsystem_noshell\fR is an almost drop in replacement for \fBsystem\fR(3)
 provided by the libc. \fBsystem_noshell\fR parses the command string
 and runs the command directly, without using a shell.
+(\fBsystem_execsp\fR and \fBsystem_noshell\fR are synonyms).
 .br
 Command arguments in \fIargs\fR are delimited by space characters (blank, tabs
 or new lines).
@@ -40,6 +47,15 @@ is sought using the PATH environment variable as explained for \fBexeclp\fR(3).
 .br
 \fBsystem_execs\fR requires the path of the executable to be specified
 as its first parameter so it does not use the PATH environment variable.
+.br
+\fBsystem_execsrp\fR and \fBsystem_execsr\fR works as their couterparts
+without the 'r', but they permit the redirection of standard input, output
+and error streams. Their last parameter is an array of three integers.
+The standard input of the command will be redirected to \fBredir[0]\fR 
+if it is positive, the standard output to \fBredir[1]\fR if it is not
+negative and different from 1, the standard error to \fBredir[2]\fR if 
+it is not negative and different from 2.
+
 .SH RETURN VALUE
 These functions have the same return values of \fBsystem\fR(3).
 
