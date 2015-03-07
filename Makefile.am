@@ -1,4 +1,5 @@
 lib_LTLIBRARIES = libs2argv.la libexecs.la
+AM_CFLAGS= -Werror -Wall
 libs2argv_la_SOURCES = s2argv.c noshell.c
 libexecs_la_SOURCES = s2argv.c
 libexecs_la_CPPFLAGS = -DNOCOPY_ONLY

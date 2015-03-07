@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/wait.h>
 
 extern char **environ;
 
@@ -59,33 +60,14 @@ static inline int execse(const char *path, const char *args, char *const envp[])
 	return execs_common(path, args, envp, buf);
 }
 
-static inline int execs(const char *path, const char *args) {
-	return execse(path, args, environ);
-}
+#define execs(path, args) execse((path),(args),environ)
+#define execsp(args) execse(NULL,(args),environ)
+#define execspe(args,env) execse(NULL,(args),(env))
 
-static inline int execsp(const char *args) {
-	return execse(NULL, args, environ);
-}
-
-static inline int execspe(const char *args, char *const envp[]) {
-	return execse(NULL, args, envp);
-}
-
-static inline int execs_nocopy(const char *path, char *args) {
-	return execs_common(path, args, environ, args);
-}
-
-static inline int execse_nocopy(const char *path, char *args, char *const envp[]) {
-	return execs_common(path, args, envp, args);
-}
-
-static inline int execsp_nocopy(char *args) {
-	return execs_common(NULL, args, environ, args);
-}
-
-static inline int execspe_nocopy(char *args, char *const envp[]) {
-	return execs_common(NULL, args, envp, args);
-}
+#define execs_nocopy(path, args) execs_common((path),(args),environ,(args))
+#define execse_nocopy(path, args, env) execs_common((path),(args),(env),(args))
+#define execsp_nocopy(args) execs_common(NULL,(args),environ,(args))
+#define execspe_nocopy(args,env) execs_common(NULL,(args),(env),(args))
 
 static inline int system_nocopy(const char *command) {
 	int status;
@@ -110,18 +92,10 @@ static inline int system_nocopy(const char *command) {
 	 the program whose path has been passed as its first arg. */
 int system_execsr(const char *path, const char *command, int *redir);
 
-static inline int system_execsrp(const char *command, int *redir) {
-	return system_execsr(NULL, command, redir);
-}
-
-static inline int system_execs(const char *path, const char *command) {
-	return system_execsr(path, command, NULL);
-}
-
-#define system_noshell system_execsp
-static inline int system_execsp(const char *command) {
-	return system_execsr(NULL, command, NULL);
-}
+#define system_execsrp(cmd,redir) system_execsr(NULL,(cmd),(redir))
+#define system_execs(path,cmd) system_execsr((path),(cmd),NULL)
+#define system_noshell(cmd) system_execsr(NULL,(cmd),NULL)
+#define system_execsp(cmd) system_execsr(NULL,(cmd),NULL)
 
 /* popen_noshell is an "almost" drop in replacement for popen(3),
 	 and pclose_noshell is its counterpart for pclose(3). */
@@ -129,51 +103,22 @@ static inline int system_execsp(const char *command) {
 FILE *popen_execs(const char *path, const char *command, const char *type);
 int pclose_execs(FILE *stream);
 
-#define popen_noshell popen_execsp
-static inline FILE *popen_execsp(const char *command, const char *type) {
-	return popen_execs(NULL, command, type);
-}
-
-#define pclose_noshell pclose_execs
-#define pclose_execsp pclose_execs
+#define popen_noshell(cmd, type) popen_execs(NULL, (cmd), (type))
+#define popen_execsp(cmd, type) popen_execs(NULL, (cmd), (type))
+#define pclose_noshell(stream) pclose_execs(stream)
+#define pclose_execsp(stream) pclose_execs(stream)
 
 /* run a command in coprocessing mode */
 pid_t coprocess_common(const char *path, const char *command,
 		char *const argv[], char *const envp[], int pipefd[2]);
 
-static inline pid_t coprocv(const char *path, char *const argv[], int pipefd[2]) {
-	return coprocess_common(path, NULL, argv, environ, pipefd);
-}
-
-static inline pid_t coprocve(const char *path, char *const argv[], char *const envp[], int pipefd[2]) {
-	return coprocess_common(path, NULL, argv, envp, pipefd);
-}
-
-static inline pid_t coprocvp(const char *file, char *const argv[], int pipefd[2]) {
-	return coprocess_common(NULL, file, argv, environ, pipefd);
-}
-
-static inline pid_t coprocvpe(const char *file, char *const argv[],
-		char *const envp[], int pipefd[2]) {
-	return coprocess_common(NULL, file, argv, envp, pipefd);
-}
-
-static inline pid_t coprocs(const char *path, const char *command, int pipefd[2]) {
-	return coprocess_common(path, command, NULL, environ, pipefd);
-}
-
-static inline pid_t coprocse(const char *path, const char *command, 
-		char *const envp[], int pipefd[2]) {
-	return coprocess_common(path, command, NULL, envp, pipefd);
-}
-
-static inline pid_t coprocsp(const char *command, int pipefd[2]) {
-	return coprocess_common(NULL, command, NULL, environ, pipefd);
-}
-
-static inline pid_t coprocspe(const char *command, 
-		char *const envp[], int pipefd[2]) {
-	return coprocess_common(NULL, command, NULL, envp, pipefd);
-}
+#define coprocv(path, argv, pfd) coprocess_common((path),NULL,(argv), environ, pfd)
+#define coprocve(path, argv, env, pfd) coprocess_common((path),NULL,(argv), (env), pfd)
+#define coprocvp(file, argv, pfd) coprocess_common(NULL,(file),(argv), environ, pfd)
+#define coprocvpe(file, argv, env, pfd) coprocess_common(NULL,(file),(argv), (env), pfd)
+#define coprocs(path, cmd, pfd) coprocess_common((path),(cmd),NULL, environ, pfd)
+#define coprocse(path, cmd, env, pfd) coprocess_common((path),(cmd),NULL, (env), pfd)
+#define coprocsp(cmd, pfd) coprocess_common(NULL,(cmd),NULL, environ, pfd)
+#define coprocspe(cmd, env, pfd) coprocess_common(NULL,(cmd),NULL, (env), pfd)
 
 #endif
