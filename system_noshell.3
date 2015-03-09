@@ -29,9 +29,9 @@ system_noshell, system_execs \- execute a command with its arguments from a stri
 .br
 .BI "int system_execs(const char *" path ", char const *" command ");"
 .sp
-.BI "int system_execsrp(const char *" command ", int *" redir ");"
+.BI "int system_execsrp(const char *" command ", int " redir "[3]);"
 .br
-.BI "int system_execsr(const char *" path ", char const *" command ", int *" redir ");"
+.BI "int system_execsr(const char *" path ", char const *" command ", int " redir "[3]);"
 .SH DESCRIPTION
 \fBsystem_noshell\fR is an almost drop in replacement for \fBsystem\fR(3)
 provided by the libc. \fBsystem_noshell\fR parses the command string
@@ -60,7 +60,7 @@ it is not negative and different from 2.
 These functions have the same return values of \fBsystem\fR(3).
 
 .SH EXAMPLE
-The following program demonstrates the use of \fBsystem_noshell\fR:
+The following program shows the usage of \fBsystem_noshell\fR:
 .BR
 .sp
 \&

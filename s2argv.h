@@ -90,7 +90,7 @@ static inline int system_nocopy(const char *command) {
 /* system_execs is similar to system_noshell but instead of searching the
 	 executable file along the directories listed in $PATH it starts
 	 the program whose path has been passed as its first arg. */
-int system_execsr(const char *path, const char *command, int *redir);
+int system_execsr(const char *path, const char *command, int redir[3]);
 
 #define system_execsrp(cmd,redir) system_execsr(NULL,(cmd),(redir))
 #define system_execs(path,cmd) system_execsr((path),(cmd),NULL)

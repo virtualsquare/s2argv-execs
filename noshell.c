@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <s2argv.h>
 
-int system_execsr(const char *path, const char *command, int *redir) {
+int system_execsr(const char *path, const char *command, int redir[3]) {
 	if (command) {
 		int status;
 		pid_t pid;
