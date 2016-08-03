@@ -60,11 +60,11 @@ typedef char * (* s2argv_getvar_t) (const char *name);
 extern s2argv_getvar_t s2argv_getvar;
 
 /* multi argv. Args can contain several commands semicolon (;) separated.
-	 This function parses args and calls f for each command in args.
+	 This function parses args and calls f for each command/argv in args.
 	 If f returns 0 s2multiargv calls f for the following argv, otherwise
-	 returns the non-zero value.
+	 returns the non-zero value. 
 	*/
-int s2multiargv(void *arg, const char *args, int (*f)(void *arg, char **argv));
+int s2multiargv(void *opaque, const char *args, int (*f)(void *opaque, char **argv));
 
 /* execs is like execv: argv is computed by parsing args */
 /* execsp is like execvp: argv is computed by parsing args,
