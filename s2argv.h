@@ -36,13 +36,35 @@ extern char **environ;
 
 /* s2argv parses args. 
 	 It allocates, initializes and returns an argv array, ready for execv. 
-	 If pargc is not NULL, *pargc is set to the number of args 
-	 (including argv[0], excluding the (char *)0 termination tag, as usual).
+	 s2argv is able to parse several commands separated by semicolons (;).
+	 The return value is the sequence of all the corresponding argv
+	 (each one has a NULL element as its terminator) and one further
+	 NULL element terminates the whole sequence.
+	 (i.e. this multi-argv has two NULLs in a row at its end).
+	 This format is compatible with the standard argv.
  */
-char **s2argv(const char *args, int *pargc);
+char **s2argv(const char *args);
 
 /* s2argv_free deallocates an argv returned by s2argv */
 void s2argv_free(char **argv);
+
+/* number of elements of argv */
+size_t s2argvlen(char **argv);
+
+/* argc of the (first) command */
+/* argv=argv+s2argc(argv)+1 is the next argv */
+size_t s2argc(char **argv);
+
+/* var definition function (e.g. s2argv_getvar=getenv)*/
+typedef char * (* s2argv_getvar_t) (const char *name);
+extern s2argv_getvar_t s2argv_getvar;
+
+/* multi argv. Args can contain several commands semicolon (;) separated.
+	 This function parses args and calls f for each command in args.
+	 If f returns 0 s2multiargv calls f for the following argv, otherwise
+	 returns the non-zero value.
+	*/
+int s2multiargv(void *arg, const char *args, int (*f)(void *arg, char **argv));
 
 /* execs is like execv: argv is computed by parsing args */
 /* execsp is like execvp: argv is computed by parsing args,
@@ -93,9 +115,11 @@ static inline int system_nocopy(const char *command) {
 int system_execsr(const char *path, const char *command, int redir[3]);
 
 #define system_execsrp(cmd,redir) system_execsr(NULL,(cmd),(redir))
+#define system_execsra(cmd,redir) system_execsr("",(cmd),(redir))
 #define system_execs(path,cmd) system_execsr((path),(cmd),NULL)
 #define system_noshell(cmd) system_execsr(NULL,(cmd),NULL)
 #define system_execsp(cmd) system_execsr(NULL,(cmd),NULL)
+#define system_execsa(cmd) system_execsr("",(cmd),NULL)
 
 /* popen_noshell is an "almost" drop in replacement for popen(3),
 	 and pclose_noshell is its counterpart for pclose(3). */

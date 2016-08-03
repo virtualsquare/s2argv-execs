@@ -7,29 +7,48 @@
 #include <stdlib.h>
 #include <s2argv.h>
 
-int system_execsr(const char *path, const char *command, int redir[3]) {
-	if (command) {
-		int status;
-		pid_t pid;
-		switch (pid=fork()) {
-			case -1:
-				return -1;
-			case 0:
-				if (redir) {
-					int i;
-					for (i=0; i<3; i++) {
-						if (redir[i] >= 0 && redir[i] != i) {
-							dup2(redir[i],i);
-							close(redir[i]);
-						}
+struct system_execsr_t {
+	const char *path;
+	int *redir;
+};
+
+static int system_execsr_f(void *arg, char **argv) {
+	struct system_execsr_t *v=arg;
+	int status;
+	pid_t pid;
+	switch (pid=fork()) {
+		case -1:
+			return -1;
+		case 0:
+			if (v->redir) {
+				int i;
+				for (i=0; i<3; i++) {
+					if (v->redir[i] >= 0 && v->redir[i] != i) {
+						dup2(v->redir[i],i);
+						close(v->redir[i]);
 					}
 				}
-				execs(path, command);
-				_exit(127);
-			default:
-				waitpid(pid,&status,0);
-				return status;
-		}
+			}
+			if (v->path) {
+				if (*v->path) 
+					execv(v->path, argv);
+				else if (argv[0][0] == '/')
+					execv(argv[0], argv);
+				else
+					_exit(127);
+			} else
+				execvp(argv[0], argv);
+			_exit(127);
+		default:
+			waitpid(pid,&status,0);
+			return status;
+	}
+}
+
+int system_execsr(const char *path, const char *command, int redir[3]) {
+	struct system_execsr_t execsrvar={path,redir};
+	if (command) {
+		return s2multiargv(&execsrvar, command, system_execsr_f);
 	} else
 		return 1; // for system compatibility
 }
