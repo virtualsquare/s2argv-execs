@@ -12,7 +12,7 @@ struct system_execsr_t {
 	int *redir;
 };
 
-static int system_execsr_f(void *arg, char **argv) {
+static int system_execsr_f(char **argv, void *arg) {
 	struct system_execsr_t *v=arg;
 	int status;
 	pid_t pid;
@@ -20,6 +20,8 @@ static int system_execsr_f(void *arg, char **argv) {
 		case -1:
 			return -1;
 		case 0:
+			if (__builtin_expect(s2_fork_security && s2_fork_security(s2_fork_security_arg) != 0, 0))
+				_exit(127);
 			if (v->redir) {
 				int i;
 				for (i=0; i<3; i++) {
@@ -48,7 +50,7 @@ static int system_execsr_f(void *arg, char **argv) {
 int system_execsr(const char *path, const char *command, int redir[3]) {
 	struct system_execsr_t execsrvar={path,redir};
 	if (command) {
-		return s2multiargv(&execsrvar, command, system_execsr_f);
+		return s2multiargv(command, system_execsr_f, &execsrvar);
 	} else
 		return 1; // for system compatibility
 }
@@ -65,6 +67,8 @@ pid_t coprocess_common(const char *path, const char *command,
 			case -1:
 				return -1;
 			case 0:
+				if (__builtin_expect(s2_fork_security && s2_fork_security(s2_fork_security_arg) != 0, 0))
+					_exit(127);
 				if (dup2(pfd_in[0],0) == -1 || dup2(pfd_out[1],1) == -1)
 					_exit(127);
 				close(pfd_in[0]);
@@ -115,6 +119,8 @@ FILE *popen_execs(const char *path, const char *command, const char *type) {
 				free(new);
 				return NULL;
 			case 0:
+				if (__builtin_expect(s2_fork_security && s2_fork_security(s2_fork_security_arg) != 0, 0))
+					_exit(127);
 				dup2(fd[1-streamno],1-streamno);
 				close(fd[0]);
 				close(fd[1]);

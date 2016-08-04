@@ -24,7 +24,7 @@ system_noshell, system_execs \- execute a command with its arguments from a stri
 .B #include <s2argv.h>
 .sp
 .BI "int system_noshell(const char *" command ");"
-.sp
+.br
 .BI "int system_execsp(const char *" command ");"
 .sp
 .BI "int system_execsa(const char *" command ");"
@@ -52,7 +52,7 @@ is sought using the PATH environment variable as explained for \fBexeclp\fR(3).
 \fBsystem_execs\fR requires the path of the executable to be specified
 as its first parameter so it does not use the PATH environment variable.
 .br
-\fBsystem_execsa\fR does not use the PATH environment, argv[0] must be
+\fBsystem_execsa\fR does not use the PATH variable, argv[0] must be
 specified as a full pathname.
 .br
 \fBsystem_execsrp\fR and \fBsystem_execsr\fR works as their couterparts
@@ -63,7 +63,7 @@ if it is positive, the standard output to \fBredir[1]\fR if it is not
 negative and different from 1, the standard error to \fBredir[2]\fR if 
 it is not negative and different from 2.
 .br
-\fBsystem_execsra\fR does not use the PATH environment, argv[0] must be
+\fBsystem_execsra\fR does not use the PATH variable, argv[0] must be
 specified as a full pathname.
 .br
 All these functions can run sequences of commands separated by semicolons (\fB;\fR).

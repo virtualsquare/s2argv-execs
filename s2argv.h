@@ -59,12 +59,18 @@ size_t s2argc(char **argv);
 typedef char * (* s2argv_getvar_t) (const char *name);
 extern s2argv_getvar_t s2argv_getvar;
 
+/* fork security: if defined this function gets called for each child process created
+	 by this library. If it returns a non zero value it fails and exec is aborted */
+/* it can be used to drop privileges such as capabilities */
+extern int (* s2_fork_security)(void *s2_fork_security_arg);
+extern void *s2_fork_security_arg;
+
 /* multi argv. Args can contain several commands semicolon (;) separated.
 	 This function parses args and calls f for each command/argv in args.
 	 If f returns 0 s2multiargv calls f for the following argv, otherwise
 	 returns the non-zero value. 
 	*/
-int s2multiargv(void *opaque, const char *args, int (*f)(void *opaque, char **argv));
+int s2multiargv(const char *args, int (*f)(char **argv, void *opaque), void *opaque);
 
 /* execs is like execv: argv is computed by parsing args */
 /* execsp is like execvp: argv is computed by parsing args,
@@ -98,7 +104,8 @@ static inline int system_nocopy(const char *command) {
 		case -1:
 			return -1;
 		case 0:
-			execs_common(NULL, (char *) command, environ, (char *) command);
+			if (__builtin_expect(s2_fork_security == NULL || s2_fork_security(s2_fork_security_arg) == 0, 1))
+				execs_common(NULL, (char *) command, environ, (char *) command);
 			_exit(127);
 		default:
 			waitpid(pid,&status,0);

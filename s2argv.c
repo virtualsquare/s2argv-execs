@@ -68,6 +68,8 @@ char action[NSTATES][NSTATES-1]= {
 	{ENDCMD|ENDARG,CHCOPY,       CHCOPY,CHCOPY,CHCOPY,CHCOPY,       CHCOPY,CHCOPY}}; //DBLESC
 
 s2argv_getvar_t s2argv_getvar=getenv;
+int (* s2_fork_security)(void *s2_fork_security_arg);
+void *s2_fork_security_arg;
 
 static int args_fsa(const char *args, char **argv, char *buf)
 {
@@ -181,7 +183,7 @@ size_t s2argc(char **argv) {
 	return argc;
 }
 
-int s2multiargv(void *opaque, const char *args, int (*f)(void *opaque, char **argv))
+int s2multiargv(const char *args, int (*f)(char **argv, void *opaque), void *opaque)
 {
 	int argc=args_fsa(args,NULL,NULL);
 	char *argv[argc+1];
@@ -190,7 +192,7 @@ int s2multiargv(void *opaque, const char *args, int (*f)(void *opaque, char **ar
 	args_fsa(args,argv,buf);
 	int rv=0;
 	while (*thisargv && rv==0) {
-		rv=f(opaque, thisargv);
+		rv=f(thisargv, opaque);
 		while (*thisargv) thisargv++;
 		thisargv++;
 	}
