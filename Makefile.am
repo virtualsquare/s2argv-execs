@@ -4,11 +4,11 @@ noinst_PROGRAMS = execstest
 AM_CFLAGS= -Werror -Wall
 
 libexecs_la_SOURCES = execs.c noshell.c
-libexecs_la_LDFLAGS = -version-number 1:0:0
+libexecs_la_LDFLAGS = -version-number 0:9:0
 
 libeexecs_la_SOURCES = execs.c
 libeexecs_la_CPPFLAGS = -DEEXECS
-libeexecs_la_LDFLAGS = -version-number 1:0:0
+libeexecs_la_LDFLAGS = -version-number 0:9:0
 
 execstest_SOURCE = exectest.c 
 execstest_LDADD = -lexecs
