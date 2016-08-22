@@ -1,7 +1,7 @@
 AC_PREREQ([2.68])
 AC_INIT([s2argv], [0.1], [info@v2.cs.unibo.it])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AC_CONFIG_SRCDIR([s2argv.c])
+AC_CONFIG_SRCDIR([execs.c])
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.

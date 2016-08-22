@@ -14,12 +14,12 @@
 .\" You should have received a copy of the GNU Lesser General Public
 .\" License along with this library; if not, write to the Free Software
 .\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-.TH system_noshell 3 2014-05-27 "VirtualSquare" "Linux Programmer's Manual"
+.TH coprocess 3 2014-05-27 "VirtualSquare" "Linux Programmer's Manual"
 .SH NAME
 
 coprocv, coprocvp, coprocvpe, coprocs, coprocsp \- execute a command in coprocessing mode
 .SH SYNOPSIS
-.B #include <s2argv.h>
+.B #include <execs.h>
 .sp
 .BI "pid_t coprocv(const char *" path ", char *const " argv "[], int " pipefd "[2]);"
 .br
@@ -44,7 +44,8 @@ coprocv, coprocvp, coprocvpe, coprocs, coprocsp \- execute a command in coproces
 .BI "pid_t coprocspe(const char *" command ", char *const " envp "[],"
 .br
 .BI "                           int " pipefd "[2]);
-.br
+.sp
+These functions are provided by libexecs. Link with \fI-lexecs\fR.
 .SH DESCRIPTION
 These functions run commands in coprocessing mode. 
 They differs in the way to specify the executable file to run and its 

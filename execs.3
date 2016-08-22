@@ -1,4 +1,4 @@
-.\"* s2argv: convert strings to argv
+.\"* execs: convert strings to argv
 .\" Copyright (C) 2014 Renzo Davoli. University of Bologna. <renzo@cs.unibo.it>
 .\" 
 .\" This library is free software; you can redistribute it and/or
@@ -20,7 +20,7 @@ execs, execsp, execspe \- execute a file taking its arguments from a string
 .SH SYNOPSIS
 .B #include <unistd.h>
 .br
-.B #include <s2argv.h>
+.B #include <execs.h>
 .sp
 .BI "int execs(const char *" path ", const char *" args ");"
 .br
@@ -32,13 +32,15 @@ execs, execsp, execspe \- execute a file taking its arguments from a string
 .sp
 .sp
 .sp
-.BI "int execs_nocopy(const char *" path ", char *" args ");"
+.BI "int eexecs(const char *" path ", char *" args ");"
 .br
-.BI "int execse_nocopy(const char *" path ", char *" args ", char *const " envp "[]);"
+.BI "int eexecse(const char *" path ", char *" args ", char *const " envp "[]);"
 .br
-.BI "int execsp_nocopy(char *" args ");"
+.BI "int eexecsp(char *" args ");"
 .br
-.BI "int execspe_nocopy(char *" args ", char *const " envp "[]);"
+.BI "int eexecspe(char *" args ", char *const " envp "[]);"
+.sp
+These functions are provided by libexecs and libeexecs. Link with \fI-lexecs\fR or \fI-leexecs\fR.
 .SH DESCRIPTION
 This
 group of functions extends the family of \fBexec\fR(3) provided by the libc.
@@ -46,7 +48,7 @@ group of functions extends the family of \fBexec\fR(3) provided by the libc.
 \fBexecs\fR, \fBexecse\fR, \fBexecsp\fR and \fBexecspe\fR are similar to
 \fBexecv\fR(3), \fBexecve\fR(2), \fBexecvp\fR(3) and \fBexecvpe\fR(3), respectively, but
 take the command line arguments for the file to execute 
-(and the filename for \fBexecsp\fR(3) and \fBexecspe\fR(3))
+(and the also the command name for \fBexecsp\fR(3) and \fBexecspe\fR(3))
 by parsing a command string \fIargs\fR.
 .br
 Command arguments in \fIargs\fR are delimited by space characters (blank, tabs
@@ -58,7 +60,7 @@ is the escape character to protect the next char.
 \fBexecs\fR, \fBexecse\fR, \fBexecsp\fR and \fBexecspe\fR do not use
 dynamic allocation but require space on the stack to store an entire
 copy of \fIargs\fR.
-\fBexecs_nocopy\fR, \fBexecse_nocopy\fR, \fBexecsp_nocopy\fR and \fBexecspe_nocopy\fR
+\fBeexecs\fR, \fBeexecse\fR, \fBeexecsp\fR and \fBeexecspe\fR
 do not use extra stack space but modify \fIargs\fR.
 
 In case the same argv should be used for several exec command, use
@@ -70,14 +72,14 @@ is always \-1. The failure cases and errno values are those specified
 for \fBexecve\fR(2).
 
 .SH EXAMPLE
-The following program demonstrates the use of \fBs2argv\fR:
+The following program demonstrates the use of \fBexecs\fR:
 .BR
 .sp
 \&
 .nf
 #include <stdio.h>
 #include <unistd.h>
-#include <s2argv.h>
+#include <execs.h>
 
 #define BUFLEN 1024
 int main(int argc, char *argv)

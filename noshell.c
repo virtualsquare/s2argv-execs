@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <s2argv.h>
+#include <execs.h>
 
 struct system_execsr_t {
 	const char *path;
@@ -20,7 +20,7 @@ static int system_execsr_f(char **argv, void *arg) {
 		case -1:
 			return -1;
 		case 0:
-			if (__builtin_expect(s2_fork_security && s2_fork_security(s2_fork_security_arg) != 0, 0))
+			if (__builtin_expect(execs_fork_security && execs_fork_security(execs_fork_security_arg) != 0, 0))
 				_exit(127);
 			if (v->redir) {
 				int i;
@@ -67,7 +67,7 @@ pid_t coprocess_common(const char *path, const char *command,
 			case -1:
 				return -1;
 			case 0:
-				if (__builtin_expect(s2_fork_security && s2_fork_security(s2_fork_security_arg) != 0, 0))
+				if (__builtin_expect(execs_fork_security && execs_fork_security(execs_fork_security_arg) != 0, 0))
 					_exit(127);
 				if (dup2(pfd_in[0],0) == -1 || dup2(pfd_out[1],1) == -1)
 					_exit(127);
@@ -119,15 +119,15 @@ FILE *popen_execs(const char *path, const char *command, const char *type) {
 				free(new);
 				return NULL;
 			case 0:
-				if (__builtin_expect(s2_fork_security && s2_fork_security(s2_fork_security_arg) != 0, 0))
+				if (__builtin_expect(execs_fork_security && execs_fork_security(execs_fork_security_arg) != 0, 0))
 					_exit(127);
 				dup2(fd[1-streamno],1-streamno);
 				close(fd[0]);
 				close(fd[1]);
 				if (path)
-					execs_nocopy(path, (char *) command);
+					eexecs(path, (char *) command);
 				else
-					execsp_nocopy((char *) command);
+					eexecsp((char *) command);
 				_exit(127);
 			default:
 				close(fd[1-streamno]);

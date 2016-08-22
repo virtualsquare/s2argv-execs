@@ -1,4 +1,4 @@
-.\"* system_noshell: system replacement not using any shell
+.\"* system_nosh: system replacement not using any shell
 .\" Copyright (C) 2014 Renzo Davoli. University of Bologna. <renzo@cs.unibo.it>
 .\" 
 .\" This library is free software; you can redistribute it and/or
@@ -14,16 +14,16 @@
 .\" You should have received a copy of the GNU Lesser General Public
 .\" License along with this library; if not, write to the Free Software
 .\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-.TH system_noshell 3 2014-05-27 "VirtualSquare" "Linux Programmer's Manual"
+.TH system_nosh 3 2014-05-27 "VirtualSquare" "Linux Programmer's Manual"
 .SH NAME
 
-system_noshell, system_execs \- execute a command with its arguments from a string without using a shell
+system_nosh, system_execs \- execute a command with its arguments from a string without using a shell
 .SH SYNOPSIS
 .B #include <stdlib.h>
 .br
-.B #include <s2argv.h>
+.B #include <execs.h>
 .sp
-.BI "int system_noshell(const char *" command ");"
+.BI "int system_nosh(const char *" command ");"
 .br
 .BI "int system_execsp(const char *" command ");"
 .sp
@@ -36,11 +36,13 @@ system_noshell, system_execs \- execute a command with its arguments from a stri
 .BI "int system_execsra(const char *" command ", int " redir "[3]);"
 .br
 .BI "int system_execsr(const char *" path ", char const *" command ", int " redir "[3]);"
+.sp
+These functions are provided by libexecs. Link with \fI-lexecs\fR.
 .SH DESCRIPTION
-\fBsystem_noshell\fR is an almost drop in replacement for \fBsystem\fR(3)
-provided by the libc. \fBsystem_noshell\fR parses the command string
+\fBsystem_nosh\fR is an almost drop in replacement for \fBsystem\fR(3)
+provided by the libc. \fBsystem_nosh\fR parses the command string
 and runs the command directly, without using a shell.
-(\fBsystem_execsp\fR and \fBsystem_noshell\fR are synonyms).
+(\fBsystem_execsp\fR and \fBsystem_nosh\fR are synonyms).
 .br
 Command arguments in \fIargs\fR are delimited by space characters (blank, tabs
 or new lines).
@@ -74,14 +76,14 @@ running a sequence of commands, it returns the exit status of the first
 command returning a non-zero value. If the return value is zero it means
 that all the commands of the sequence succeeded.
 .SH EXAMPLE
-The following program shows the usage of \fBsystem_noshell\fR:
+The following program shows the usage of \fBsystem_nosh\fR:
 .BR
 .sp
 \&
 .nf
 #include <stdio.h>
 #include <unistd.h>
-#include <s2argv.h>
+#include <execs.h>
 
 #define BUFLEN 1024
 int main(int argc, char *argv)
@@ -90,7 +92,7 @@ int main(int argc, char *argv)
 	printf("type in a command and its arguments, e.g. 'ls -l'\\n");
 	while (fgets(buf, BUFLEN, stdin) != NULL) {
 		printf("Command: '%s' \\n",buf);
-		system_noshell(buf);
+		system_nosh(buf);
 		printf("Command done\\n");
 	}
 }

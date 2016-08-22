@@ -20,28 +20,29 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <s2argv.h>
 #include <unistd.h>
-//#define  S2ARGVTEST
+#include <execs.h>
 
 //char *sn[] = { "END", "SPACE", "CHAR", "SGLQ", "DBLQ", "ESCAPE", "SEMIC", "VAR", "ESCVAR", "DBLESC" };
 #define END 0
 #define SPACE 1
 #define CHAR 2
-#define SGLQ 3
-#define DBLQ 4
-#define ESCAPE 5
-#define SEMIC 6
-#define VAR 7
-#define ESCVAR 8
-#define DBLESC 9
+#define SGLQ 3 //single quote
+#define DBLQ 4 //double quote
+#define ESCAPE 5 // escape '\'
+#define SEMIC 6 // semicolon ;
+#define VAR 7 // $name
+#define ESCVAR 8 // '\' in variable name
+#define DBLESC 9 // '\' in double quoted text
 #define NSTATES (DBLESC+1)
 
-#define NEWARG 0x1
-#define CHCOPY 0x2
-#define ENDARG 0x4
-#define ENDVAR 0x8
-#define ENDCMD 0x10
+#define NEWARG 0x1 // beginning of a new argument
+#define CHCOPY 0x2 // copy the char in current argv
+#define ENDARG 0x4 // end of an argument
+#define ENDVAR 0x8 // end of a variable
+#define ENDCMD 0x10 // end of a command
+
+/* This is the FSA used to get the lexical items of the command line */
 
 char nextstate[NSTATES][NSTATES-1]= {
 	{END,    0,   0,   0,   0,     0,    0,   0}, // END
@@ -68,8 +69,8 @@ char action[NSTATES][NSTATES-1]= {
 	{ENDCMD|ENDARG,CHCOPY,       CHCOPY,CHCOPY,CHCOPY,CHCOPY,       CHCOPY,CHCOPY}}; //DBLESC
 
 s2argv_getvar_t s2argv_getvar=getenv;
-int (* s2_fork_security)(void *s2_fork_security_arg);
-void *s2_fork_security_arg;
+int (* execs_fork_security)(void *execs_fork_security_arg);
+void *execs_fork_security_arg;
 
 static int args_fsa(const char *args, char **argv, char *buf)
 {
@@ -140,7 +141,7 @@ static int args_fsa(const char *args, char **argv, char *buf)
 	return argc;
 }
 
-#ifndef NOCOPY_ONLY
+#ifndef EEXECS
 
 char **s2argv(const char *args)
 {
@@ -210,51 +211,3 @@ int execs_common(const char *path, const char *args, char *const envp[], char *b
 	else
 		return execvpe(argv[0], argv, envp);
 }
-
-#ifdef S2ARGVTEST
-
-static void printargv(char **argv)
-{
-	for(;*argv!=0;argv++) {
-		int argc=0;
-		for(;*argv!=0;argv++,argc++)
-			printf("argv[%d]=\"%s\"\n",argc,*argv);
-		argc++;
-	}
-}
-
-static int print1argv(void *useless, char **argv) 
-{
-	int argc=0;
-	for(;*argv!=0;argv++,argc++)
-		printf("argv[%d]=\"%s\"\n",argc,*argv);
-	return 0;
-}
-
-int main()
-{
-	char buf[1024];
-	s2argv_getvar=getenv;
-	while (1) {
-		char **myargv;
-		fgets(buf,1024,stdin);
-		//buf[strlen(buf)-1]=0;
-#if 0
-		myargv=s2argv(buf);
-		printargv(myargv);
-		printf("len %ld argc %ld\n", s2argvlen(myargv), s2argc(myargv));
-		s2argv_free(myargv);
-		s2multiargv(NULL, buf, print1argv);
-		if (fork()==0) {
-			execsp_nocopy(buf);
-			exit(-1);
-		} else {
-			int status;
-			wait(&status);
-		}
-#else
-		printf("%d\n",WEXITSTATUS(system_execsa(buf)));
-#endif
-	}
-}
-#endif

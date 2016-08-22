@@ -1,4 +1,4 @@
-.\"* popen_noshell: system replacement not using any shell
+.\"* popen_nosh: system replacement not using any shell
 .\" Copyright (C) 2014 Renzo Davoli. University of Bologna. <renzo@cs.unibo.it>
 .\" 
 .\" This library is free software; you can redistribute it and/or
@@ -14,18 +14,18 @@
 .\" You should have received a copy of the GNU Lesser General Public
 .\" License along with this library; if not, write to the Free Software
 .\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-.TH popen_noshell 3 2014-05-27 "VirtualSquare" "Linux Programmer's Manual"
+.TH popen_nosh 3 2014-05-27 "VirtualSquare" "Linux Programmer's Manual"
 .SH NAME
 
-popen_noshell, pclose_noshell, popen_execs, pclose_execs, \- pipe stream to or from a process without using a shell
+popen_nosh, pclose_nosh, popen_execs, pclose_execs, \- pipe stream to or from a process without using a shell
 .SH SYNOPSIS
 .B #include <stdio.h>
 .br
-.B #include <s2argv.h>
+.B #include <execs.h>
 .sp
-.BI "FILE *popen_noshell(const char *" command ", const char *" type ");"
+.BI "FILE *popen_nosh(const char *" command ", const char *" type ");"
 .br
-.BI "int pclose_noshell(FILE *" stream ");"
+.BI "int pclose_nosh(FILE *" stream ");"
 .sp
 .BI "FILE *popen_execsp(const char *" command ", const char *" type ");"
 .br
@@ -34,9 +34,11 @@ popen_noshell, pclose_noshell, popen_execs, pclose_execs, \- pipe stream to or f
 .BI "FILE *popen_execs(const char *" path ",const char *" command ", const char *" type ");"
 .br
 .BI "int pclose_execs(FILE *" stream ");"
+.sp
+These functions are provided by libexecs. Link with \fI-lexecs\fR.
 .SH DESCRIPTION
-\fBpopen_noshell\fR, \fBpopen_execsp\fR and \fBpclose_noshell\fR are almost drop in replacement for \fBpopen\fR(3) and \fBpclose\fR(3)
-provided by the libc. \fBpopen_noshell\fR and \fBpopen_execsp\fR are synonyms: they parse the command string
+\fBpopen_nosh\fR, \fBpopen_execsp\fR and \fBpclose_nosh\fR are almost drop in replacement for \fBpopen\fR(3) and \fBpclose\fR(3)
+provided by the libc. \fBpopen_nosh\fR and \fBpopen_execsp\fR are synonyms: they parse the command string
 and run the command directly, without using a shell.
 .br
 Command arguments in \fIargs\fR are delimited by space characters (blank, tabs
@@ -46,7 +48,7 @@ spaces and a non quoted backslash (\fB\e\fP)
 is the escape character to protect the next char. The executable file
 is sought using the PATH environment variable as explained for \fBexeclp\fR(3).
 .br
-\fBpclose_noshell\fR closes a stream opened by \fBpopen_noshell\fR.
+\fBpclose_nosh\fR closes a stream opened by \fBpopen_nosh\fR.
 .br
 \fBpopen_execs\fR requires the path of the executable to be specified
 as its first parameter so it does not use the PATH environment variable.
