@@ -44,6 +44,7 @@ install-exec-hook:
 	ln -sf coprocess.3 $(DESTDIR)$(man3dir)/coprocse.3
 	ln -sf coprocess.3 $(DESTDIR)$(man3dir)/coprocsp.3
 	ln -sf coprocess.3 $(DESTDIR)$(man3dir)/coprocspe.3
+	ldconfig
 
 uninstall-hook:
 	rm -f $(DESTDIR)$(man3dir)/system_eexecsp.3
