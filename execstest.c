@@ -48,7 +48,8 @@ int main()
 	s2argv_getvar=getenv;
 	while (1) {
 		char **myargv;
-		fgets(buf,1024,stdin);
+		if (fgets(buf,1024,stdin) == NULL)
+			return 0;
 		buf[strlen(buf)-1]=0;
 		myargv=s2argv(buf);
 		printargv(myargv);

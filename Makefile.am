@@ -16,7 +16,7 @@ execstest_LDADD = -lexecs
 include_HEADERS = execs.h
 man_MANS = s2argv.3 execs.3 system_nosh.3 popen_nosh.3 coprocess.3 esystem.3
 
-install-exec-hook:
+install-data-hook:
 	ln -sf esystem.3 $(DESTDIR)$(man3dir)/system_eexecsp.3
 	ln -sf execs.3 $(DESTDIR)$(man3dir)/execse.3
 	ln -sf execs.3 $(DESTDIR)$(man3dir)/execsp.3
@@ -44,7 +44,6 @@ install-exec-hook:
 	ln -sf coprocess.3 $(DESTDIR)$(man3dir)/coprocse.3
 	ln -sf coprocess.3 $(DESTDIR)$(man3dir)/coprocsp.3
 	ln -sf coprocess.3 $(DESTDIR)$(man3dir)/coprocspe.3
-	ldconfig
 
 uninstall-hook:
 	rm -f $(DESTDIR)$(man3dir)/system_eexecsp.3
