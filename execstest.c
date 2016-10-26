@@ -53,7 +53,7 @@ int main()
 		buf[strlen(buf)-1]=0;
 		myargv=s2argv(buf);
 		printargv(myargv);
-		printf("len %ld argc %ld\n", s2argvlen(myargv), s2argc(myargv));
+		printf("len %zd argc %zd\n", s2argvlen(myargv), s2argc(myargv));
 		s2argv_free(myargv);
 		s2multiargv(buf, print1argv, NULL);
 		if (fork()==0) {
