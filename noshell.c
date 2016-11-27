@@ -61,7 +61,7 @@ pid_t coprocess_common(const char *path, const char *command,
 		int pfd_in[2];
 		int pfd_out[2];
 		pid_t pid;
-		if (pipe(pfd_in) == -1 || pipe(pfd_out) == -1)
+		if (pipe2(pfd_in, O_CLOEXEC) == -1 || pipe2(pfd_out, O_CLOEXEC) == -1)
 			return -1;
 		switch (pid=fork()) {
 			case -1:
@@ -106,7 +106,7 @@ FILE *popen_execs(const char *path, const char *command, const char *type) {
 		int fd[2];
 		struct popen_info *new;
 		int streamno = (type[0] == 'r') ? STDIN_FILENO : STDOUT_FILENO;
-		if (pipe(fd))
+		if (pipe2(fd, O_CLOEXEC))
 			return NULL;
 		if ((new=malloc(sizeof(struct popen_info)))==NULL) {
 			errno = ENOMEM;
