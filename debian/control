@@ -1,0 +1,38 @@
+Source: libexecs
+Priority: optional
+Maintainer: Giulia Cantini <giuliacantini3@gmail.com>
+Build-Depends: debhelper (>= 9), autotools-dev, dh-autoreconf
+Standards-Version: 3.9.8
+Section: libs
+Homepage: 
+#Vcs-Git: https://anonscm.debian.org/collab-maint/s2argv-execs.git
+#Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/s2argv-execs.git
+
+Package: libexecs-dev
+Section: libdevel
+Architecture: any
+Depends: libexecs0 (= ${binary:Version}), ${misc:Depends}
+Description: contains header files
+ this package contains header files to develop using functions provided
+ by s2argv-execs library
+
+Package: libexecs0
+Section: devel
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: C library for commands execution
+ s2argv converts a command string into an argv array for execv, execvp, 
+ execvpe. execs is like execv taking a string instead of an argv. 
+ Similarly execsp and execspe are the counterpart of execvp and execvpe, 
+ respectively, using command strings.
+
+Package: libeexecs0
+Section: devel
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: C library for commands execution
+ this is the reduced memory footprint version of s2argv for embedded systems.
+ s2argv converts a command string into an argv array for execv, execvp, 
+ execvpe. execs is like execv taking a string instead of an argv. 
+ Similarly execsp and execspe are the counterpart of execvp and execvpe, 
+ respectively, using command strings.
