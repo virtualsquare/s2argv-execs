@@ -77,9 +77,9 @@ pid_t coprocess_common(const char *path, const char *command,
 				close(pfd_out[1]);
 				if (argv) {
 					if (path)
-						execve(command, argv, envp);
+						execve(path, argv, envp);
 					else
-						execvpe(path, argv, envp);
+						execvpe(command, argv, envp);
 				} else 
 					execse(path, command, envp);
 				_exit(127);
