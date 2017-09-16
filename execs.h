@@ -155,6 +155,10 @@ size_t s2argc(char **argv);
 /* var definition function (e.g. s2argv_getvar=getenv)*/
 typedef char * (* s2argv_getvar_t) (const char *name);
 extern s2argv_getvar_t s2argv_getvar;
+/* getvar_null is the deafult value for s2argv_getvar,
+	 it always returns an empty string for any variable name */
+char *getvar_null(const char *name);
+
 
 /* multi argv. Args can contain several commands semicolon (;) separated.
 	 This function parses args and calls f for each command/argv in args.

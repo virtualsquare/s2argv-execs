@@ -68,9 +68,14 @@ char action[NSTATES][NSTATES-1]= {
 	{ENDCMD|ENDVAR,CHCOPY,       CHCOPY,CHCOPY,CHCOPY,CHCOPY,       CHCOPY,CHCOPY}, //ESCVAR
 	{ENDCMD|ENDARG,CHCOPY,       CHCOPY,CHCOPY,CHCOPY,CHCOPY,       CHCOPY,CHCOPY}}; //DBLESC
 
-s2argv_getvar_t s2argv_getvar=getenv;
+char *getvar_null(const char *name);
+s2argv_getvar_t s2argv_getvar=getvar_null;
 int (* execs_fork_security)(void *execs_fork_security_arg);
 void *execs_fork_security_arg;
+
+char *getvar_null(const char *name) {
+	return "";
+}
 
 static int args_fsa(const char *args, char **argv, char *buf)
 {
