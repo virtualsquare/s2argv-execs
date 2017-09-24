@@ -11,7 +11,7 @@ libeexecs_la_CPPFLAGS = -DEEXECS
 libeexecs_la_LDFLAGS = -version-number 0:9:0
 
 execstest_SOURCE = exectest.c 
-execstest_LDADD = -lexecs
+execstest_LDADD = libexecs.la
 
 include_HEADERS = execs.h
 man_MANS = s2argv.3 execs.3 system_nosh.3 popen_nosh.3 coprocess.3 esystem.3
