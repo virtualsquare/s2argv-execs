@@ -158,8 +158,8 @@ char **s2argv(const char *args)
 		args_fsa(args,argv,buf);
 		for (i=0; i<argc+1; i++)
 			argv[i]=argv[i]?strdup(argv[i]):0;
-		for (i=0; i<argc+1; i++)
-			printf("%d %s\n",i,argv[i]);
+		/* for (i=0; i<argc+1; i++) 
+			printf("%d %s\n",i,argv[i]); */
 	}
 	return argv;
 }
