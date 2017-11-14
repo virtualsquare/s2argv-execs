@@ -1,4 +1,12 @@
-libexecs (1.0-1) UNRELEASED; urgency=low
+libexecs (1.1-1) unstable; urgency=medium
+
+  * New upstream release. (Closes: #873675) 
+  * Update Standards-Version to 4.0.0.
+  * Add missing dependency in libexecs-dev. (Closes: #875421)
+
+ -- Giulia Cantini <giuliacantini3@gmail.com>  Sat, 14 Oct 2017 18:00:04 +0200
+
+libexecs (1.0-1) unstable; urgency=low
 
   * Initial release. (Closes: #859737)
 

@@ -1,2 +1,2 @@
-usr/lib/*/libexecs*.so.*
-usr/lib/*/libexecs*.a
+usr/lib/*/libexecs.so.*
+usr/lib/*/libexecs.a
