@@ -55,7 +55,8 @@ tags the end of the array returned by s2argv.
 .br
 \fBs2argv\fR supports variables as arguments. When an argument of a command is a dollar
 sign followed by a name (e.g. $USER) \fBs2argv\fR puts the output of the \fBs2argv_getvar\fR
-function instead. (The default value is \fBs2argv_getvar=getenv\fR.
+function instead. (It is possible for example to assign \fBs2argv_getvar=getenv\fR.
+For security reasons, the default value is getvar_null which always returns an empty string.
 Programmers can use their own custom function instead).
 .sp
 .BR s2argv_free
