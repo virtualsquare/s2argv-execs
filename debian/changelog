@@ -1,3 +1,10 @@
+libexecs (1.2-1) unstable; urgency=medium
+
+  * new tag 1.2.
+  * fix management of debian packaging on git
+
+ -- Renzo Davoli <renzo@cs.unibo.it>  Sat, 05 Jan 2019 14:43:54 +0100
+
 libexecs (1.1-1) unstable; urgency=medium
 
   * New upstream release. (Closes: #873675) 
