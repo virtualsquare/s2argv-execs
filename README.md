@@ -9,19 +9,11 @@ Use cases are included in the man pages.
 
 To install this library:
 ```
-$ autoreconf -if
-$ ./configure
+$ mkdir build
+$ cd build
+$ cmake ..
 $ make
 $ sudo make install
 ```
 
-To create the .deb package:
-```
-$ git clone https://github.com/rd235/s2argv-execs.git
-$ cd s2argv-execs/
-$ ./create_deb.sh
-```
-Note that by doing so binary packages will be created in the parent directory.
-
-
-Copyright Renzo Davoli 2014, renzo@cs.unibo.it
+Copyright Renzo Davoli 2014-2020, renzo@cs.unibo.it
