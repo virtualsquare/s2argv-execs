@@ -128,15 +128,15 @@ int pclose_execs(FILE *stream);
 pid_t _coprocess_common(const char *path, const char *command,
 		char *const argv[], char *const envp[], int pipefd[2], int flags);
 
-#define coprocv(path, argv, pfd) _coprocess_common((path),NULL,(argv), environ, pfd)
-#define coprocve(path, argv, env, pfd) _coprocess_common((path),NULL,(argv), (env), pfd)
-#define coprocvp(file, argv, pfd) _coprocess_common(NULL,(file),(argv), environ, pfd)
-#define coprocvpe(file, argv, env, pfd) _coprocess_common(NULL,(file),(argv), (env), pfd)
+#define coprocv(path, argv, pfd) _coprocess_common((path),NULL,(argv), environ, pfd, EXECS_NOSEQ)
+#define coprocve(path, argv, env, pfd) _coprocess_common((path),NULL,(argv), (env), pfd, EXECS_NOSEQ)
+#define coprocvp(file, argv, pfd) _coprocess_common(NULL,(file),(argv), environ, pfd, EXECS_NOSEQ)
+#define coprocvpe(file, argv, env, pfd) _coprocess_common(NULL,(file),(argv), (env), pfd, EXECS_NOSEQ)
 
-#define coprocs(path, cmd, pfd) _coprocess_common((path),(cmd),NULL, environ, pfd)
-#define coprocse(path, cmd, env, pfd) _coprocess_common((path),(cmd),NULL, (env), pfd)
-#define coprocsp(cmd, pfd) _coprocess_common(NULL,(cmd),NULL, environ, pfd)
-#define coprocspe(cmd, env, pfd) _coprocess_common(NULL,(cmd),NULL, (env), pfd)
+#define coprocs(path, cmd, pfd) _coprocess_common((path),(cmd),NULL, environ, pfd, EXECS_NOSEQ)
+#define coprocse(path, cmd, env, pfd) _coprocess_common((path),(cmd),NULL, (env), pfd, EXECS_NOSEQ)
+#define coprocsp(cmd, pfd) _coprocess_common(NULL,(cmd),NULL, environ, pfd, EXECS_NOSEQ)
+#define coprocspe(cmd, env, pfd) _coprocess_common(NULL,(cmd),NULL, (env), pfd, EXECS_NOSEQ)
 
 /* Low level argc management functions */
 
