@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.12)
 project(s2argv-execs
-    VERSION 1.3
+    VERSION 1.4
     DESCRIPTION "execute a file taking its arguments from a string"
     HOMEPAGE_URL "https://github.com/rd235/s2argv-execs"
     LANGUAGES C)
 
-set(LIB_VERSION 0.9.0)
-set(LIB_SOVERSION 0)
+set(LIB_VERSION 1.4.0)
+set(LIB_SOVERSION 1)
 
 include(GNUInstallDirs)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic")

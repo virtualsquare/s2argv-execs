@@ -21,6 +21,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <errno.h>
 #include <execs.h>
 
 //char *sn[] = { "END", "SPACE", "CHAR", "SGLQ", "DBLQ", "ESCAPE", "SEMIC", "VAR", "ESCVAR", "DBLESC" };
@@ -44,7 +45,7 @@
 
 /* This is the FSA used to get the lexical items of the command line */
 
-char nextstate[NSTATES][NSTATES-1]= {
+static char nextstate[NSTATES][NSTATES-1]= {
 	{END,    0,   0,   0,   0,     0,    0,   0}, // END
 	{END,SPACE,CHAR,SGLQ,DBLQ,ESCAPE,SEMIC, VAR}, // SPACE
 	{END,SPACE,CHAR,SGLQ,DBLQ,ESCAPE,SEMIC,CHAR}, // CHAR
@@ -56,7 +57,7 @@ char nextstate[NSTATES][NSTATES-1]= {
 	{END,  VAR, VAR, VAR, VAR,   VAR,  VAR, VAR}, // ESCVAR
 	{END, DBLQ,DBLQ,DBLQ,DBLQ,  DBLQ, DBLQ,DBLQ}}; // DBLESC
 
-char action[NSTATES][NSTATES-1]= {
+static char action[NSTATES][NSTATES-1]= {
 	{ENDCMD|     0,     0,            0,     0,     0,     0,            0,     0}, //END
 	{ENDCMD|     0,     0,NEWARG|CHCOPY,NEWARG,NEWARG,NEWARG,       ENDCMD,NEWARG}, //SPACE
 	{ENDCMD|ENDARG,ENDARG,       CHCOPY,     0,     0,     0,ENDCMD|ENDARG,     0}, //CHAR
@@ -68,16 +69,11 @@ char action[NSTATES][NSTATES-1]= {
 	{ENDCMD|ENDVAR,CHCOPY,       CHCOPY,CHCOPY,CHCOPY,CHCOPY,       CHCOPY,CHCOPY}, //ESCVAR
 	{ENDCMD|ENDARG,CHCOPY,       CHCOPY,CHCOPY,CHCOPY,CHCOPY,       CHCOPY,CHCOPY}}; //DBLESC
 
-char *getvar_null(const char *name);
-s2argv_getvar_t s2argv_getvar=getvar_null;
+s2argv_getvar_t s2argv_getvar=NULL;
 int (* execs_fork_security)(void *execs_fork_security_arg);
 void *execs_fork_security_arg;
 
-char *getvar_null(const char *name) {
-	return "";
-}
-
-static int args_fsa(const char *args, char **argv, char *buf)
+static int args_fsa(const char *args, char **argv, char *buf, int flags)
 {
 	int state=SPACE;
 	int argc=0;
@@ -130,9 +126,9 @@ static int args_fsa(const char *args, char **argv, char *buf)
 					*argv="";
 				argv++;
 			}
-			if (action[state][this] & ENDCMD) 
+			if (action[state][this] & ENDCMD)
 				*argv++=0;
-		} 
+		}
 		if (action[state][this] & (ENDARG|ENDVAR))
 			argc++;
 		if (action[state][this] & ENDCMD)
@@ -140,6 +136,12 @@ static int args_fsa(const char *args, char **argv, char *buf)
 		//printf("%c %s+%s=%s %x\n",*args,sn[state],sn[this],sn[nextstate[state][this]],action[state][this]);
 		//printf("%s %d->%d\n",args,state,nextstate[state][this]);
 		state=nextstate[state][this];
+		switch (state) {
+			case VAR: if (flags & EXECS_NOVAR) return errno = EINVAL, -1;
+									break;
+			case SEMIC: if (flags & EXECS_NOSEQ) return errno = EINVAL, -1;
+										break;
+		}
 	}
 	if (argv)
 		*argv=0;
@@ -150,15 +152,15 @@ static int args_fsa(const char *args, char **argv, char *buf)
 
 char **s2argv(const char *args)
 {
-	int argc=args_fsa(args,NULL,NULL);
+	int argc=args_fsa(args,NULL,NULL,0);
 	char buf[strlen(args)+1];
 	char **argv=calloc(argc+1,sizeof(char *));
 	if (argv) {
 		int i;
-		args_fsa(args,argv,buf);
+		args_fsa(args,argv,buf,0);
 		for (i=0; i<argc+1; i++)
 			argv[i]=argv[i]?strdup(argv[i]):0;
-		/* for (i=0; i<argc+1; i++) 
+		/* for (i=0; i<argc+1; i++)
 			printf("%d %s\n",i,argv[i]); */
 	}
 	return argv;
@@ -189,13 +191,16 @@ size_t s2argc(char **argv) {
 	return argc;
 }
 
-int s2multiargv(const char *args, int (*f)(char **argv, void *opaque), void *opaque)
+int s2multiargv(const char *args,
+		int (*f)(char **argv, void *opaque), void *opaque, int flags)
 {
-	int argc=args_fsa(args,NULL,NULL);
+	int argc=args_fsa(args,NULL,NULL,flags);
+	if (argc < 0)
+		return -1;
 	char *argv[argc+1];
 	char buf[strlen(args)+1];
 	char **thisargv=argv;
-	args_fsa(args,argv,buf);
+	args_fsa(args,argv,buf,0);
 	int rv=0;
 	while (*thisargv && rv==0) {
 		rv=f(thisargv, opaque);
@@ -206,13 +211,23 @@ int s2multiargv(const char *args, int (*f)(char **argv, void *opaque), void *opa
 }
 #endif
 
-int execs_common(const char *path, const char *args, char *const envp[], char *buf)
+int _execs_common(const char *path, const char *args, char *const envp[], char *buf, int flags)
 {
-	int argc=args_fsa(args,NULL,NULL);
+	int argc=args_fsa(args,NULL,NULL,flags);
 	char *argv[argc+1];
-	args_fsa(args,argv,buf);
-	if (path)
-		return execve(path, argv, envp);
-	else
+	char tmpbuf[(buf == NULL) ? strlen(args) + 1 : 0];
+	if (buf == NULL) buf = tmpbuf;
+	if (args_fsa(args,argv,buf,flags) < 0)
+		return -1;
+	if (path) {
+		if (*path)
+			return execve(path, argv, envp);
+		else {
+			if (argv[0][0] == '/')
+				return execvpe(argv[0], argv, envp);
+			else
+				return errno = EACCES, -1;
+		}
+	} else
 		return execvpe(argv[0], argv, envp);
 }

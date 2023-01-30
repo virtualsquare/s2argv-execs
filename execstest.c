@@ -1,4 +1,3 @@
-
 /*
  * s2argv: convert strings to argv
  * Copyright (C) 2014 Renzo Davoli. University of Bologna. <renzo@cs.unibo.it>
@@ -55,7 +54,7 @@ int main()
 		printargv(myargv);
 		printf("len %zd argc %zd\n", s2argvlen(myargv), s2argc(myargv));
 		s2argv_free(myargv);
-		s2multiargv(buf, print1argv, NULL);
+		s2multiargv(buf, print1argv, NULL, 0);
 		if (fork()==0) {
 			eexecsp(buf);
 			exit(-1);

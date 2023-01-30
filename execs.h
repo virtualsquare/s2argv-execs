@@ -25,12 +25,14 @@
 #include <string.h>
 #include <sys/wait.h>
 
+#define EXECS_SOVERSION 1
+
 extern char **environ;
 
 /* This header file declares all the functions defined in
-	 the libexecs and libeexecs libraries.  
-	 libeexecs is a minimal subset of the libexecs library designed 
-	 for embedded systems with strict memory requirements. 
+	 the libexecs and libeexecs libraries.
+	 libeexecs is a minimal subset of the libexecs library designed
+	 for embedded systems with strict memory requirements.
 	 It implements only the execs* functions. Programs using libexecs
 	 can also use the esystem (a.k.a. system_eexecsp) inline function */
 
@@ -45,27 +47,26 @@ extern void *execs_fork_security_arg;
 /* execs is like execv: argv is computed by parsing args */
 /* execsp is like execvp: argv is computed by parsing args,
 	 argv[0] is the executable file to be searched for along $PATH */
-/* execse and execspe permit the specification of the environment 
+/* execse and execspe permit the specification of the environment
 	 (as in execve or execvpe) */
 /* execs, execse, execsp and execspe do not require dynamic allocation *but*
 	 require an extra copy of args on the stack */
-/* in all eexecs* functions, the string args is modified 
+/* in all eexecs* functions, the string args is modified
 	 (no extra copies on the stack, args is parsed on itself): */
-int execs_common(const char *path, const char *args, char *const envp[], char *buf);
+#define EXECS_NOSEQ 0x1
+#define EXECS_NOVAR 0x2
 
-static inline int execse(const char *path, const char *args, char *const envp[]) {
-	char buf[strlen(args)+1]; 
-	return execs_common(path, args, envp, buf);
-}
+int _execs_common(const char *path, const char *args, char *const envp[], char *buf, int flags);
 
-#define execs(path, args) execse((path),(args),environ)
-#define execsp(args) execse(NULL,(args),environ)
-#define execspe(args,env) execse(NULL,(args),(env))
+#define execs(path, args) _execs_common((path),(args),environ,NULL,EXECS_NOSEQ)
+#define execse(path, args, env) _execs_common((path),(args),(env),NULL,EXECS_NOSEQ)
+#define execsp(args) _execs_common(NULL,(args),environ,NULL,EXECS_NOSEQ)
+#define execspe(args,env) _execs_common(NULL,(args),(env),NULL,EXECS_NOSEQ)
 
-#define eexecs(path, args) execs_common((path),(args),environ,(args))
-#define eexecse(path, args, env) execs_common((path),(args),(env),(args))
-#define eexecsp(args) execs_common(NULL,(args),environ,(args))
-#define eexecspe(args,env) execs_common(NULL,(args),(env),(args))
+#define eexecs(path, args) _execs_common((path),(args),environ,(args),EXECS_NOSEQ)
+#define eexecse(path, args, env) _execs_common((path),(args),(env),(args),EXECS_NOSEQ)
+#define eexecsp(args) _execs_common(NULL,(args),environ,(args),EXECS_NOSEQ)
+#define eexecspe(args,env) _execs_common(NULL,(args),(env),(args),EXECS_NOSEQ)
 
 static inline int system_eexecsp(const char *command) {
 	int status;
@@ -75,7 +76,7 @@ static inline int system_eexecsp(const char *command) {
 			return -1;
 		case 0:
 			if (__builtin_expect(execs_fork_security == NULL || execs_fork_security(execs_fork_security_arg) == 0, 1))
-				execs_common(NULL, (char *) command, environ, (char *) command);
+				_execs_common(NULL, (char *) command, environ, (char *) command, 0);
 			_exit(127);
 		default:
 			waitpid(pid,&status,0);
@@ -87,52 +88,60 @@ static inline int system_eexecsp(const char *command) {
 
 /******** library functions defined in libexecs only (not in libeexec) ********/
 
+int _system_common(const char *path, const char *command, int redir[3], int flags);
+
+/* system_safe requires the absolute path of the command */
+/* system_execs executes the program whose path has been passed as its first arg. */
+#define system_safe(cmd)                  _system_common("",(cmd),NULL,EXECS_NOSEQ | EXECS_NOVAR)
+
+#define system_execs(path,cmd)            _system_common((path),(cmd),NULL,EXECS_NOSEQ)
+#define system_execsp(cmd)                _system_common(NULL,(cmd),NULL,EXECS_NOSEQ)
+#define system_execsa(cmd)                _system_common("",(cmd),NULL,EXECS_NOSEQ)
+#define system_execsr(path,command,redir) _system_common((path),(cmd),(redir),EXECS_NOSEQ)
+#define system_execsrp(cmd,redir)         _system_common(NULL,(cmd),(redir),EXECS_NOSEQ)
+#define system_execsra(cmd,redir)         _system_common("",(cmd),(redir),EXECS_NOSEQ)
+
 /* system_nosh is an "almost" drop in replacement for system(3).
 	 it does not start a shell but it parses the arguments and
 	 runs the command */
-/* system_execs is similar to system_nosh but instead of searching the
-	 executable file along the directories listed in $PATH it starts
-	 the program whose path has been passed as its first arg. */
-int system_execsr(const char *path, const char *command, int redir[3]);
+/* system_execsq* support colon separated sequences of commands */
+#define system_nosh(cmd)                  _system_common(NULL,(cmd),NULL,0)
+#define system_execsqp(cmd)               _system_common(NULL,(cmd),NULL,0)
+#define system_execsqa(cmd)               _system_common("",(cmd),NULL,0)
+#define system_execsqrp(cmd,redir)        _system_common(NULL,(cmd),(redir),0)
+#define system_execsqra(cmd,redir)        _system_common("",(cmd),(redir),0)
 
-#define system_nosh(cmd) system_execsr(NULL,(cmd),NULL)
-
-#define system_execsrp(cmd,redir) system_execsr(NULL,(cmd),(redir))
-#define system_execsra(cmd,redir) system_execsr("",(cmd),(redir))
-#define system_execs(path,cmd) system_execsr((path),(cmd),NULL)
-#define system_execsp(cmd) system_execsr(NULL,(cmd),NULL)
-#define system_execsa(cmd) system_execsr("",(cmd),NULL)
+FILE *_popen_common(const char *path, const char *command, const char *type, int flags);
+/* popen_execs/pclose_execs do not use $PATH to search the executable file*/
+int pclose_execs(FILE *stream);
 
 /* popen_nosh is an "almost" drop in replacement for popen(3),
 	 and pclose_nosh is its counterpart for pclose(3). */
-/* popen_execs/pclose_execs do not use $PATH to search the executable file*/
-FILE *popen_execs(const char *path, const char *command, const char *type);
-int pclose_execs(FILE *stream);
+#define popen_nosh(cmd, type) _popen_common(NULL, (cmd), (type))
+#define pclose_nosh(stream) _popen_common(stream)
 
-#define popen_nosh(cmd, type) popen_execs(NULL, (cmd), (type))
-#define pclose_nosh(stream) pclose_execs(stream)
-
-#define popen_execsp(cmd, type) popen_execs(NULL, (cmd), (type))
+#define popen_execs(path, cmd, type) _popen_common(path, (cmd), (type), EXECS_NOSEQ)
+#define popen_execsp(cmd, type) _popen_common(NULL, (cmd), (type), EXECS_NOSEQ)
 #define pclose_execsp(stream) pclose_execs(stream)
 
 /* run a command in coprocessing mode */
-pid_t coprocess_common(const char *path, const char *command,
-		char *const argv[], char *const envp[], int pipefd[2]);
+pid_t _coprocess_common(const char *path, const char *command,
+		char *const argv[], char *const envp[], int pipefd[2], int flags);
 
-#define coprocv(path, argv, pfd) coprocess_common((path),NULL,(argv), environ, pfd)
-#define coprocve(path, argv, env, pfd) coprocess_common((path),NULL,(argv), (env), pfd)
-#define coprocvp(file, argv, pfd) coprocess_common(NULL,(file),(argv), environ, pfd)
-#define coprocvpe(file, argv, env, pfd) coprocess_common(NULL,(file),(argv), (env), pfd)
+#define coprocv(path, argv, pfd) _coprocess_common((path),NULL,(argv), environ, pfd)
+#define coprocve(path, argv, env, pfd) _coprocess_common((path),NULL,(argv), (env), pfd)
+#define coprocvp(file, argv, pfd) _coprocess_common(NULL,(file),(argv), environ, pfd)
+#define coprocvpe(file, argv, env, pfd) _coprocess_common(NULL,(file),(argv), (env), pfd)
 
-#define coprocs(path, cmd, pfd) coprocess_common((path),(cmd),NULL, environ, pfd)
-#define coprocse(path, cmd, env, pfd) coprocess_common((path),(cmd),NULL, (env), pfd)
-#define coprocsp(cmd, pfd) coprocess_common(NULL,(cmd),NULL, environ, pfd)
-#define coprocspe(cmd, env, pfd) coprocess_common(NULL,(cmd),NULL, (env), pfd)
+#define coprocs(path, cmd, pfd) _coprocess_common((path),(cmd),NULL, environ, pfd)
+#define coprocse(path, cmd, env, pfd) _coprocess_common((path),(cmd),NULL, (env), pfd)
+#define coprocsp(cmd, pfd) _coprocess_common(NULL,(cmd),NULL, environ, pfd)
+#define coprocspe(cmd, env, pfd) _coprocess_common(NULL,(cmd),NULL, (env), pfd)
 
 /* Low level argc management functions */
 
-/* s2argv parses args. 
-	 It allocates, initializes and returns an argv array, ready for execv. 
+/* s2argv parses args.
+	 It allocates, initializes and returns an argv array, ready for execv.
 	 s2argv is able to parse several commands separated by semicolons (;).
 	 The return value is the sequence of all the corresponding argv
 	 (each one has a NULL element as its terminator) and one further
@@ -145,7 +154,7 @@ char **s2argv(const char *args);
 /* s2argv_free deallocates an argv returned by s2argv */
 void s2argv_free(char **argv);
 
-/* number of elements of argv */
+/* the sum of s2argc for all commands, including the NULLs */
 size_t s2argvlen(char **argv);
 
 /* argc of the (first) command */
@@ -155,16 +164,13 @@ size_t s2argc(char **argv);
 /* var definition function (e.g. s2argv_getvar=getenv)*/
 typedef char * (* s2argv_getvar_t) (const char *name);
 extern s2argv_getvar_t s2argv_getvar;
-/* getvar_null is the deafult value for s2argv_getvar,
-	 it always returns an empty string for any variable name */
-char *getvar_null(const char *name);
-
 
 /* multi argv. Args can contain several commands semicolon (;) separated.
 	 This function parses args and calls f for each command/argv in args.
 	 If f returns 0 s2multiargv calls f for the following argv, otherwise
-	 returns the non-zero value. 
+	 returns the non-zero value.
 	*/
-int s2multiargv(const char *args, int (*f)(char **argv, void *opaque), void *opaque);
+int s2multiargv(const char *args,
+		int (*f)(char **argv, void *opaque), void *opaque, int flags);
 
 #endif

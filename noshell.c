@@ -1,3 +1,22 @@
+/*
+ * noshell: system(3) safe and effficient replacements
+ * Copyright (C) 2014-2023 Renzo Davoli. University of Bologna. <renzo@cs.unibo.it>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <fcntl.h>
@@ -7,13 +26,14 @@
 #include <stdlib.h>
 #include <execs.h>
 
-struct system_execsr_t {
+struct system_execsq_t {
 	const char *path;
 	int *redir;
+	int flags;
 };
 
-static int system_execsr_f(char **argv, void *arg) {
-	struct system_execsr_t *v=arg;
+static int system_execsq_f(char **argv, void *arg) {
+	struct system_execsq_t *v=arg;
 	int status;
 	pid_t pid;
 	switch (pid=fork()) {
@@ -32,7 +52,7 @@ static int system_execsr_f(char **argv, void *arg) {
 				}
 			}
 			if (v->path) {
-				if (*v->path) 
+				if (*v->path)
 					execv(v->path, argv);
 				else if (argv[0][0] == '/')
 					execv(argv[0], argv);
@@ -47,16 +67,17 @@ static int system_execsr_f(char **argv, void *arg) {
 	}
 }
 
-int system_execsr(const char *path, const char *command, int redir[3]) {
-	struct system_execsr_t execsrvar={path,redir};
+int _system_common(const char *path, const char *command, int redir[3], int flags) {
+	struct system_execsq_t seqexec_var={path, redir, flags};
 	if (command) {
-		return s2multiargv(command, system_execsr_f, &execsrvar);
+		int rv = s2multiargv(command, system_execsq_f, &seqexec_var, flags);
+		return (rv == -1) ? W_EXITCODE(127, 0) : rv;
 	} else
-		return 1; // for system compatibility
+		return 1;
 }
 
-pid_t coprocess_common(const char *path, const char *command, 
-		char *const argv[], char *const envp[], int pipefd[2]) {
+pid_t _coprocess_common(const char *path, const char *command,
+		char *const argv[], char *const envp[], int pipefd[2], int flags) {
 	if (command) {
 		int pfd_in[2];
 		int pfd_out[2];
@@ -77,11 +98,11 @@ pid_t coprocess_common(const char *path, const char *command,
 				close(pfd_out[1]);
 				if (argv) {
 					if (path)
-						execve(path, argv, envp);
+						_execs_common(path, (const char *) argv, envp, NULL, flags);
 					else
-						execvpe(command, argv, envp);
-				} else 
-					execse(path, command, envp);
+						_execs_common(command, (const char *) argv, envp, NULL, flags);
+				} else
+					_execs_common(path, command, envp, NULL, flags);
 				_exit(127);
 			default:
 				pipefd[0]=pfd_out[0];
@@ -90,7 +111,7 @@ pid_t coprocess_common(const char *path, const char *command,
 				close(pfd_out[1]);
 				return pid;
 		}
-	} else 
+	} else
 		return 1;
 }
 
@@ -101,7 +122,7 @@ struct popen_info {
 };
 static struct popen_info *popen_list;
 
-FILE *popen_execs(const char *path, const char *command, const char *type) {
+FILE *_popen_common(const char *path, const char *command, const char *type, int flags) {
 	if ((type[0] == 'r' || type[0] == 'w') && (type[1] == 0 || type[1] == 'e')) {
 		int fd[2];
 		struct popen_info *new;
@@ -125,9 +146,9 @@ FILE *popen_execs(const char *path, const char *command, const char *type) {
 				close(fd[0]);
 				close(fd[1]);
 				if (path)
-					eexecs(path, (char *) command);
+					_execs_common(path,(char *) command,environ,(char *) command, flags);
 				else
-					eexecsp((char *) command);
+					_execs_common(NULL, (char *) command,environ,(char *) command, flags);
 				_exit(127);
 			default:
 				close(fd[1-streamno]);
@@ -172,4 +193,3 @@ int pclose_execs(FILE *stream) {
 	errno = EINVAL;
 	return -1;
 }
-
