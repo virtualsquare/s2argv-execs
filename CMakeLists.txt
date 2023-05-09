@@ -31,8 +31,8 @@ target_compile_options(execs-embedded_static PUBLIC -DEEXECS)
 
 install(TARGETS execs LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(TARGETS execs-embedded LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(TARGETS execs_static LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(TARGETS execs-embedded_static LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS execs_static ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS execs-embedded_static ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES execs.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 add_executable(exectest execstest.c)
